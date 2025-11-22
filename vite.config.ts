@@ -15,25 +15,8 @@ export default defineConfig(({ mode }) => {
         server: {
             port: 5173,
             proxy: {
-                '/api/agents/summary': {
-                    target: apiBase,
-                    changeOrigin: true,
-                    secure: true,
-                    headers: {
-                        Authorization: `Bearer ${apiKey || ''}`
-                    },
-                    rewrite: () => '/api/v1/workflows/run'
-                },
-                '/api/agents/linear': {
-                    target: apiBase,
-                    changeOrigin: true,
-                    secure: true,
-                    headers: {
-                        Authorization: `Bearer ${apiKey || ''}`
-                    },
-                    rewrite: () => '/api/v1/workflows/run'
-                },
-                '/api/agents/sentiment': {
+                // Single catch-all route for agent calls
+                '/api/agents': {
                     target: apiBase,
                     changeOrigin: true,
                     secure: true,
