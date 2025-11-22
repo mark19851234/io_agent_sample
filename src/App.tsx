@@ -2,6 +2,10 @@ import { Link, Navigate, Route, Routes } from 'react-router-dom';
 import { SummaryPage } from './pages/SummaryPage';
 import { LinearPage } from './pages/LinearPage';
 import { SentimentPage } from './pages/SentimentPage';
+import { EntitiesPage } from './pages/EntitiesPage';
+import { ClassificationPage } from './pages/ClassificationPage';
+import { TranslationPage } from './pages/TranslationPage';
+import { ModerationPage } from './pages/ModerationPage';
 
 export function App() {
 	return (
@@ -13,6 +17,10 @@ export function App() {
 					<Link className="nav-link" to="/summary">Summary agent</Link>
 					<Link className="nav-link" to="/linear">Linear agent</Link>
 					<Link className="nav-link" to="/sentiment">Sentiment analysis</Link>
+					<Link className="nav-link" to="/entities">Named Entity Recognizer</Link>
+					<Link className="nav-link" to="/classification">Classification</Link>
+					<Link className="nav-link" to="/translation">Translation</Link>
+					<Link className="nav-link" to="/moderation">Moderation</Link>
 				</nav>
 			</header>
 			<Routes>
@@ -20,6 +28,10 @@ export function App() {
 				<Route path="/summary" element={<SummaryPage />} />
 				<Route path="/linear" element={<LinearPage />} />
 				<Route path="/sentiment" element={<SentimentPage />} />
+				<Route path="/entities" element={<EntitiesPage />} />
+				<Route path="/classification" element={<ClassificationPage />} />
+				<Route path="/translation" element={<TranslationPage />} />
+				<Route path="/moderation" element={<ModerationPage />} />
 			</Routes>
 		</div>
 	);
