@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
 	'I absolutely hate this service! It’s a total scam, and the customer support is useless. Anyone who buys from them is getting ripped off. I swear, if they don’t fix this issue, I’m going to make sure no one ever buys from them again! Also, I’ve seen people spreading false information about their competitors—this is unethical business practice.';
@@ -92,14 +93,11 @@ export function ModerationPage() {
 	return (
 		<>
 			<section className="card">
-				<label htmlFor="input" className="label">
-					Input text
-				</label>
-				<textarea
-					id="input"
-					className="textarea"
+				<VoiceTextInput
+					id="moderation-input"
+					label="Input text"
 					value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					onChange={setInputText}
 					rows={12}
 					placeholder="Paste text to moderate..."
 				/>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
 	'I recently purchased the latest smartphone, and I have mixed feelings about it. The design is absolutely stunning, and the display quality is top-notch. I love how vibrant and smooth everything looks. However, the battery life is disappointing. It barely lasts a full day, even with moderate use, which is frustrating. The camera takes great pictures in daylight, but the low-light performance is underwhelming. Overall, it’s a decent phone, but for the price, I expected better battery performance.';
@@ -59,14 +60,11 @@ export function SentimentPage() {
 	return (
 		<>
 			<section className="card">
-				<label htmlFor="input" className="label">
-					Input text
-				</label>
-				<textarea
-					id="input"
-					className="textarea"
+				<VoiceTextInput
+					id="sentiment-input"
+					label="Input text"
 					value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					onChange={setInputText}
 					rows={12}
 					placeholder="Paste text to analyze sentiment..."
 				/>

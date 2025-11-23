@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
 	'The global electric vehicle (EV) market is witnessing exponential growth, driven by advancements in battery technology and government incentives. Major automakers, including Tesla, Ford, and Volkswagen, are investing heavily in EV production. However, challenges such as charging infrastructure and raw material shortages for lithium-ion batteries remain key concerns. Industry experts predict that by 2030, EVs will account for over 50% of new car sales worldwide, marking a significant shift in the automotive landscape.';
@@ -65,13 +66,13 @@ export function LinearPage() {
 	return (
 		<>
 			<section className="card">
-				<label className="label" htmlFor="text">Input text</label>
-				<textarea
-					id="text"
-					className="textarea"
-					rows={8}
+				<VoiceTextInput
+					id="linear-input"
+					label="Input text"
 					value={text}
-					onChange={(e) => setText(e.target.value)}
+					onChange={setText}
+					rows={8}
+					placeholder="Paste text for the linear agent..."
 				/>
 				<div className="actions" style={{ marginTop: 12 }}>
 					<div style={{ flex: 1 }}>

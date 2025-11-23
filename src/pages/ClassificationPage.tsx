@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
 	'A major tech company has announced a breakthrough in battery technology that significantly enhances energy density and reduces charging time. This innovation is expected to accelerate the adoption of electric vehicles, making them more practical for everyday use. Industry experts predict that this advancement could drive increased competition in the market and attract further investment in sustainable energy solutions.';
@@ -80,14 +81,11 @@ export function ClassificationPage() {
 	return (
 		<>
 			<section className="card">
-				<label htmlFor="input" className="label">
-					Input text
-				</label>
-				<textarea
-					id="input"
-					className="textarea"
+				<VoiceTextInput
+					id="classification-input"
+					label="Input text"
 					value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					onChange={setInputText}
 					rows={12}
 					placeholder="Paste text to classify..."
 				/>

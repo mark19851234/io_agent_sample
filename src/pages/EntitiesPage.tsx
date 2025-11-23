@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
 	'A leading technology company recently announced the launch of its latest smartphone, the Nova X, at an event in Tech Valley. The company’s CEO, Jordan Lane, highlighted the device’s improved battery life, advanced camera system, and AI-powered enhancements. To achieve higher performance and energy efficiency, the company partnered with Coretron Systems to develop the new Zenith chipset. Pre-orders will begin on October 10, and the device will be available in global markets by October 20. Industry analysts predict strong demand across multiple regions, driven by innovation and evolving consumer expectations.';
@@ -73,14 +74,11 @@ export function EntitiesPage() {
 	return (
 		<>
 			<section className="card">
-				<label htmlFor="input" className="label">
-					Input text
-				</label>
-				<textarea
-					id="input"
-					className="textarea"
+				<VoiceTextInput
+					id="entities-input"
+					label="Input text"
 					value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					onChange={setInputText}
 					rows={12}
 					placeholder="Paste text to extract entities..."
 				/>

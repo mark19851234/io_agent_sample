@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
 	'In the rapidly evolving landscape of artificial intelligence, the ability to condense vast amounts of information into concise and meaningful summaries is crucial. From research papers and business reports to legal documents and news articles, professionals across industries rely on summarization to extract key insights efficiently. Traditional summarization techniques often struggle with maintaining coherence and contextual relevance. However, advanced AI models now leverage natural language understanding to identify core ideas, eliminate redundancy, and generate human-like summaries. As organizations continue to deal with an ever-growing influx of data, the demand for intelligent summarization tools will only increase. Whether enhancing productivity, improving decision-making, or streamlining workflows, AI-powered summarization is set to become an indispensable asset in the digital age.';
@@ -72,14 +73,11 @@ export function SummaryPage() {
 	return (
 		<>
 			<section className="card">
-				<label htmlFor="input" className="label">
-					Input text
-				</label>
-				<textarea
-					id="input"
-					className="textarea"
+				<VoiceTextInput
+					id="summary-input"
+					label="Input text"
 					value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					onChange={setInputText}
 					rows={12}
 					placeholder="Paste text to summarize..."
 				/>

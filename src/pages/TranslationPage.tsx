@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
 	'The future of artificial intelligence is rapidly evolving. With advancements in deep learning and neural networks, AI is transforming industries such as healthcare, finance, and transportation. As technology continues to improve, AI will play an even greater role in solving complex problems and enhancing human capabilities.';
@@ -61,14 +62,11 @@ export function TranslationPage() {
 	return (
 		<>
 			<section className="card">
-				<label htmlFor="input" className="label">
-					Input text
-				</label>
-				<textarea
-					id="input"
-					className="textarea"
+				<VoiceTextInput
+					id="translation-input"
+					label="Input text"
 					value={inputText}
-					onChange={(e) => setInputText(e.target.value)}
+					onChange={setInputText}
 					rows={12}
 					placeholder="Paste text to translate..."
 				/>
