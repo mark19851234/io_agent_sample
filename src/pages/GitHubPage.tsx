@@ -50,7 +50,7 @@ export function GitHubPage() {
 	const [existingSecrets, setExistingSecrets] = useState<Map<string, string>>(new Map()); // tool_name -> secret_id
 	const [isConfigured, setIsConfigured] = useState<boolean>(false);
 	const [text, setText] = useState<string>(SAMPLE_TEXT);
-	const [name, setName] = useState<string>('');
+	const [name, setName] = useState<string>('foo');
 	const [objective, setObjective] = useState<string>('check all repositories accessible to me and list unmerged PRs');
 	const [instructions, setInstructions] = useState<string>('use tools to show me the information I requested');
 	const [isLoading, setIsLoading] = useState<boolean>(false);

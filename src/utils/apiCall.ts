@@ -13,18 +13,47 @@ type ResponseData = {
 	body: unknown;
 };
 
+// Get the actual API endpoint from the proxy URL
+function getActualApiUrl(proxyUrl: string): string {
+	const apiBase = import.meta.env.VITE_IO_API_BASE || 'https://api.intelligence-dev.io.solutions';
+	
+	// Map proxy URLs to actual API endpoints
+	if (proxyUrl.startsWith('/api/agents')) {
+		return `${apiBase}/api/v1/workflows/run`;
+	} else if (proxyUrl.startsWith('/api/secrets')) {
+		// Handle secrets endpoints (may include ID)
+		const path = proxyUrl.replace('/api/secrets', '/v1/secrets');
+		return `${apiBase}${path}`;
+	}
+	
+	// Fallback to proxy URL if not recognized
+	return `${apiBase}${proxyUrl}`;
+}
+
 export async function makeApiCall(
 	url: string,
 	method: string,
 	headers: Record<string, string>,
 	body: unknown
 ): Promise<{ request: RequestData; response: ResponseData }> {
-	// Generate curl command (escape double quotes and backslashes for shell)
+	// Get the actual API endpoint for display
+	const actualApiUrl = getActualApiUrl(url);
+	
+	// Determine which auth header to use based on endpoint
+	const isAgentCall = url.startsWith('/api/agents');
+	const isSecretsCall = url.startsWith('/api/secrets');
+	const authHeader = isAgentCall 
+		? '-H "Authorization: Bearer YOUR_API_KEY"'
+		: isSecretsCall
+		? '-H "x-api-key: YOUR_API_KEY"'
+		: '';
+	
+	// Generate curl command with actual API endpoint (escape double quotes and backslashes for shell)
 	const escapedJson = JSON.stringify(body).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-	const curlCommand = `curl -X ${method} -H "Content-Type: application/json" -d "${escapedJson}" ${window.location.origin}${url}`;
+	const curlCommand = `curl -X ${method} ${authHeader} -H "Content-Type: application/json" -d "${escapedJson}" ${actualApiUrl}`.trim();
 
 	const request: RequestData = {
-		url: `${window.location.origin}${url}`,
+		url: actualApiUrl,
 		method,
 		headers,
 		body,
