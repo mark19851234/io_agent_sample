@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { VoiceTextInput } from '../components/VoiceTextInput';
+import { RequestResponseViewer } from '../components/RequestResponseViewer';
+import { makeApiCall } from '../utils/apiCall';
 
 const SAMPLE_TEXT =
-	'I absolutely hate this service! It’s a total scam, and the customer support is useless. Anyone who buys from them is getting ripped off. I swear, if they don’t fix this issue, I’m going to make sure no one ever buys from them again! Also, I’ve seen people spreading false information about their competitors—this is unethical business practice.';
+	"I absolutely hate this service! It's a total scam, and the customer support is useless. Anyone who buys from them is getting ripped off. I swear, if they don't fix this issue, I'm going to make sure no one ever buys from them again! Also, I've seen people spreading false information about their competitors—this is unethical business practice.";
 
 type ModerationCandidate = {
 	flagged?: boolean;
@@ -16,18 +18,31 @@ export function ModerationPage() {
 	const [threshold, setThreshold] = useState<number>(0.5);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [rawResponse, setRawResponse] = useState<unknown>(null);
+	const [rawRequest, setRawRequest] = useState<{
+		url: string;
+		method: string;
+		headers: Record<string, string>;
+		body: unknown;
+		curl: string;
+	} | null>(null);
+	const [rawResponse, setRawResponse] = useState<{
+		status: number;
+		statusText: string;
+		headers: Record<string, string>;
+		body: unknown;
+	} | null>(null);
 
 	const summary = useMemo(() => {
 		if (!rawResponse || typeof rawResponse !== 'object') return '';
-		const obj = rawResponse as any;
+		const responseBody = (rawResponse as any).body;
+		if (!responseBody || typeof responseBody !== 'object') return '';
 		// Try common shapes
 		const candidates: ModerationCandidate[] = [
-			obj,
-			obj?.result,
-			obj?.data,
-			obj?.moderation,
-			obj?.result?.moderation,
+			responseBody,
+			responseBody?.result,
+			responseBody?.data,
+			responseBody?.moderation,
+			responseBody?.result?.moderation,
 		].filter(Boolean);
 		for (const c of candidates) {
 			if (!c || typeof c !== 'object') continue;
@@ -51,7 +66,7 @@ export function ModerationPage() {
 			}
 		}
 		// Fallback: try string fields
-		const str = obj?.moderation ?? obj?.result ?? obj?.output ?? obj?.data;
+		const str = responseBody?.moderation ?? responseBody?.result ?? responseBody?.output ?? responseBody?.data;
 		if (typeof str === 'string') return str;
 		return '';
 	}, [rawResponse]);
@@ -59,30 +74,33 @@ export function ModerationPage() {
 	async function handleModerate() {
 		setIsLoading(true);
 		setError(null);
+		setRawRequest(null);
 		setRawResponse(null);
-		try {
-			const response = await fetch('/api/agents/moderation', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					text: inputText,
-					agent_names: ['moderation_agent'],
-					args: {
-						type: 'moderation',
-						threshold
-					}
-				})
-			});
-
-			if (!response.ok) {
-				const text = await response.text();
-				throw new Error(`Request failed (${response.status}): ${text}`);
+		
+		const url = '/api/agents/moderation';
+		const method = 'POST';
+		const headers = {
+			'Content-Type': 'application/json'
+		};
+		const requestPayload = {
+			text: inputText,
+			agent_names: ['moderation_agent'],
+			args: {
+				type: 'moderation',
+				threshold
 			}
+		};
 
-			const data = await response.json();
-			setRawResponse(data);
+		try {
+			const { request, response } = await makeApiCall(url, method, headers, requestPayload);
+			
+			setRawRequest(request);
+			setRawResponse(response);
+
+			if (!response.status || (response.status >= 400)) {
+				const errorMessage = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+				throw new Error(`Request failed (${response.status}): ${errorMessage}`);
+			}
 		} catch (err: any) {
 			setError(err?.message ?? 'Unknown error');
 		} finally {
@@ -124,21 +142,7 @@ export function ModerationPage() {
 				{error && <div className="error">Error: {error}</div>}
 			</section>
 
-			{summary && (
-				<section className="card">
-					<h2>Result (best-effort)</h2>
-					<div className="summary">{summary}</div>
-				</section>
-			)}
-
-			{rawResponse && (
-				<section className="card">
-					<h2>Raw response</h2>
-					<pre className="pre">{JSON.stringify(rawResponse, null, 2)}</pre>
-				</section>
-			)}
+			<RequestResponseViewer request={rawRequest} response={rawResponse} bestEffortOutput={summary} />
 		</>
 	);
 }
-
-

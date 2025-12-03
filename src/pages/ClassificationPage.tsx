@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { VoiceTextInput } from '../components/VoiceTextInput';
+import { RequestResponseViewer } from '../components/RequestResponseViewer';
+import { makeApiCall } from '../utils/apiCall';
 
 const SAMPLE_TEXT =
 	'A major tech company has announced a breakthrough in battery technology that significantly enhances energy density and reduces charging time. This innovation is expected to accelerate the adoption of electric vehicles, making them more practical for everyday use. Industry experts predict that this advancement could drive increased competition in the market and attract further investment in sustainable energy solutions.';
@@ -13,18 +15,31 @@ export function ClassificationPage() {
 	const [inputText, setInputText] = useState<string>(SAMPLE_TEXT);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [rawResponse, setRawResponse] = useState<unknown>(null);
+	const [rawRequest, setRawRequest] = useState<{
+		url: string;
+		method: string;
+		headers: Record<string, string>;
+		body: unknown;
+		curl: string;
+	} | null>(null);
+	const [rawResponse, setRawResponse] = useState<{
+		status: number;
+		statusText: string;
+		headers: Record<string, string>;
+		body: unknown;
+	} | null>(null);
 
 	const classes: string[] = useMemo(() => {
 		if (!rawResponse || typeof rawResponse !== 'object') return [];
-		const obj = rawResponse as any;
+		const responseBody = (rawResponse as any).body;
+		if (!responseBody || typeof responseBody !== 'object') return [];
 		// Try common shapes for classification
 		const candidates = [
-			obj?.labels,
-			obj?.result?.labels,
-			obj?.data?.labels,
-			obj?.classification?.labels,
-			obj?.result?.classification?.labels
+			responseBody?.labels,
+			responseBody?.result?.labels,
+			responseBody?.data?.labels,
+			responseBody?.classification?.labels,
+			responseBody?.result?.classification?.labels
 		];
 		for (const value of candidates) {
 			if (Array.isArray(value)) {
@@ -33,10 +48,10 @@ export function ClassificationPage() {
 		}
 		// Sometimes a single label might appear as a string
 		const singleCandidates = [
-			obj?.label,
-			obj?.result?.label,
-			obj?.data?.label,
-			obj?.classification?.label
+			responseBody?.label,
+			responseBody?.result?.label,
+			responseBody?.data?.label,
+			responseBody?.classification?.label
 		];
 		for (const value of singleCandidates) {
 			if (typeof value === 'string') return [value];
@@ -47,30 +62,33 @@ export function ClassificationPage() {
 	async function handleClassify() {
 		setIsLoading(true);
 		setError(null);
+		setRawRequest(null);
 		setRawResponse(null);
-		try {
-			const response = await fetch('/api/agents/classification', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					text: inputText,
-					agent_names: ['classification_agent'],
-					args: {
-						type: 'classify',
-						classify_by: ['fact', 'fiction', 'sci-fi', 'fantasy']
-					}
-				})
-			});
-
-			if (!response.ok) {
-				const text = await response.text();
-				throw new Error(`Request failed (${response.status}): ${text}`);
+		
+		const url = '/api/agents/classification';
+		const method = 'POST';
+		const headers = {
+			'Content-Type': 'application/json'
+		};
+		const requestPayload = {
+			text: inputText,
+			agent_names: ['classification_agent'],
+			args: {
+				type: 'classify',
+				classify_by: ['fact', 'fiction', 'sci-fi', 'fantasy']
 			}
+		};
 
-			const data: ClassificationResult = await response.json();
-			setRawResponse(data);
+		try {
+			const { request, response } = await makeApiCall(url, method, headers, requestPayload);
+			
+			setRawRequest(request);
+			setRawResponse(response);
+
+			if (!response.status || (response.status >= 400)) {
+				const errorMessage = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+				throw new Error(`Request failed (${response.status}): ${errorMessage}`);
+			}
 		} catch (err: any) {
 			setError(err?.message ?? 'Unknown error');
 		} finally {
@@ -108,14 +126,7 @@ export function ClassificationPage() {
 				</section>
 			)}
 
-			{rawResponse && (
-				<section className="card">
-					<h2>Raw response</h2>
-					<pre className="pre">{JSON.stringify(rawResponse, null, 2)}</pre>
-				</section>
-			)}
+			<RequestResponseViewer request={rawRequest} response={rawResponse} />
 		</>
 	);
 }
-
-

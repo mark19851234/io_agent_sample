@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { VoiceTextInput } from '../components/VoiceTextInput';
+import { RequestResponseViewer } from '../components/RequestResponseViewer';
+import { makeApiCall } from '../utils/apiCall';
 
 const SAMPLE_TEXT =
 	'show me my github issues';
@@ -292,54 +294,14 @@ export function GitHubPage() {
 			}
 		};
 
-		// Generate curl command (escape double quotes and backslashes for shell)
-		const escapedJson = JSON.stringify(requestPayload).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-		const curlCommand = `curl -X ${method} -H "Content-Type: application/json" -d "${escapedJson}" ${window.location.origin}${url}`;
-
-		setRawRequest({
-			url: `${window.location.origin}${url}`,
-			method,
-			headers,
-			body: requestPayload,
-			curl: curlCommand
-		});
-
 		try {
-			const response = await fetch(url, {
-				method,
-				headers,
-				body: JSON.stringify(requestPayload)
-			});
+			const { request, response } = await makeApiCall(url, method, headers, requestPayload);
 
-			// Get response headers
-			const responseHeaders: Record<string, string> = {};
-			response.headers.forEach((value, key) => {
-				responseHeaders[key] = value;
-			});
+			setRawRequest(request);
+			setRawResponse(response);
 
-			// Try to parse as JSON, fallback to text
-			let responseBody: unknown;
-			const contentType = response.headers.get('content-type');
-			if (contentType && contentType.includes('application/json')) {
-				try {
-					responseBody = await response.json();
-				} catch {
-					responseBody = await response.text();
-				}
-			} else {
-				responseBody = await response.text();
-			}
-
-			// Store response regardless of status
-			setRawResponse({
-				status: response.status,
-				statusText: response.statusText,
-				headers: responseHeaders,
-				body: responseBody
-			});
-
-			if (!response.ok) {
-				const errorMessage = typeof responseBody === 'string' ? responseBody : JSON.stringify(responseBody);
+			if (!response.status || (response.status >= 400)) {
+				const errorMessage = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
 				throw new Error(`Request failed (${response.status}): ${errorMessage}`);
 			}
 		} catch (err: any) {
@@ -471,64 +433,7 @@ export function GitHubPage() {
 				{error && <div className="error">Error: {error}</div>}
 			</section>
 
-			{rawRequest && (
-				<section className="card">
-					<h2>Request</h2>
-					<div style={{ marginBottom: '12px' }}>
-						<div style={{ marginBottom: '8px' }}>
-							<strong>URL:</strong> <code style={{ color: '#63e6be' }}>{rawRequest.url}</code>
-						</div>
-						<div style={{ marginBottom: '8px' }}>
-							<strong>Method:</strong> <code style={{ color: '#63e6be' }}>{rawRequest.method}</code>
-						</div>
-						<div style={{ marginBottom: '8px' }}>
-							<strong>Headers:</strong>
-							<pre className="pre" style={{ marginTop: '4px', fontSize: '12px' }}>{JSON.stringify(rawRequest.headers, null, 2)}</pre>
-						</div>
-						<div style={{ marginBottom: '8px' }}>
-							<strong>Body:</strong>
-							<pre className="pre" style={{ marginTop: '4px' }}>{JSON.stringify(rawRequest.body, null, 2)}</pre>
-						</div>
-						<div>
-							<strong>cURL Command:</strong>
-							<pre className="pre" style={{ marginTop: '4px', fontSize: '12px', wordBreak: 'break-all' }}>{rawRequest.curl}</pre>
-						</div>
-					</div>
-				</section>
-			)}
-
-			{bestEffortOutput && (
-				<section className="card">
-					<h2>Result (best-effort)</h2>
-					<div className="summary">{bestEffortOutput}</div>
-				</section>
-			)}
-
-			{rawResponse && (
-				<section className="card">
-					<h2>Response</h2>
-					<div style={{ marginBottom: '12px' }}>
-						<div style={{ marginBottom: '8px' }}>
-							<strong>Status:</strong>{' '}
-							<code style={{ color: rawResponse.status >= 200 && rawResponse.status < 300 ? '#63e6be' : '#ff6b6b' }}>
-								{rawResponse.status} {rawResponse.statusText}
-							</code>
-						</div>
-						{Object.keys(rawResponse.headers).length > 0 && (
-							<div style={{ marginBottom: '8px' }}>
-								<strong>Headers:</strong>
-								<pre className="pre" style={{ marginTop: '4px', fontSize: '12px' }}>{JSON.stringify(rawResponse.headers, null, 2)}</pre>
-							</div>
-						)}
-						<div>
-							<strong>Body:</strong>
-							<pre className="pre" style={{ marginTop: '4px' }}>
-								{typeof rawResponse.body === 'string' ? rawResponse.body : JSON.stringify(rawResponse.body, null, 2)}
-							</pre>
-						</div>
-					</div>
-				</section>
-			)}
+			<RequestResponseViewer request={rawRequest} response={rawResponse} bestEffortOutput={bestEffortOutput} />
 		</>
 	);
 }
