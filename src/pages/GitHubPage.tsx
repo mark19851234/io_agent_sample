@@ -2,16 +2,30 @@ import { useMemo, useState, useEffect } from 'react';
 import { VoiceTextInput } from '../components/VoiceTextInput';
 
 const SAMPLE_TEXT =
-	'show me my linear tickets';
+	'show me my github issues';
 
-const LINEAR_TOOL_NAMES = [
-	'agno__linear__get_user_details',
-	'agno__linear__get_issue_details',
-	'agno__linear__create_issue',
-	'agno__linear__update_issue',
-	'agno__linear__get_user_assigned_issues',
-	'agno__linear__get_workflow_issues',
-	'agno__linear__get_high_priority_issues'
+const GITHUB_TOOL_NAMES = [
+	'agno__github__search_repositories',
+	'agno__github__list_repositories',
+	'agno__github__get_repository',
+	'agno__github__get_repository_languages',
+	'agno__github__get_pull_request_count',
+	'agno__github__get_pull_request',
+	'agno__github__get_pull_request_changes',
+	'agno__github__list_issues',
+	'agno__github__get_issue',
+	'agno__github__list_issue_comments',
+	'agno__github__list_branches',
+	'agno__github__get_repository_stars',
+	'agno__github__get_pull_requests',
+	'agno__github__get_pull_request_comments',
+	'agno__github__get_pull_request_with_details',
+	'agno__github__get_repository_with_stats',
+	'agno__github__get_file_content',
+	'agno__github__get_directory_content',
+	'agno__github__get_branch_content',
+	'agno__github__search_code',
+	'agno__github__search_issues_and_prs'
 ];
 
 type Secret = {
@@ -23,9 +37,9 @@ type Secret = {
 	display: string;
 };
 
-export function LinearPage() {
-	const [linearApiKey, setLinearApiKey] = useState<string>('');
-	const [secretName, setSecretName] = useState<string>('linear-api-key');
+export function GitHubPage() {
+	const [githubApiKey, setGithubApiKey] = useState<string>('');
+	const [secretName, setSecretName] = useState<string>('github-api-key');
 	const [isSavingSecret, setIsSavingSecret] = useState<boolean>(false);
 	const [secretError, setSecretError] = useState<string | null>(null);
 	const [secretSuccess, setSecretSuccess] = useState<string | null>(null);
@@ -35,8 +49,8 @@ export function LinearPage() {
 	const [isConfigured, setIsConfigured] = useState<boolean>(false);
 	const [text, setText] = useState<string>(SAMPLE_TEXT);
 	const [name, setName] = useState<string>('');
-	const [objective, setObjective] = useState<string>('show me my linear tickets');
-	const [instructions, setInstructions] = useState<string>('use tools to show me my tickets');
+	const [objective, setObjective] = useState<string>('check all repositories accessible to me and list unmerged PRs');
+	const [instructions, setInstructions] = useState<string>('use tools to show me the information I requested');
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [rawResponse, setRawResponse] = useState<unknown>(null);
@@ -56,19 +70,19 @@ export function LinearPage() {
 
 				// Find secrets with our secret name and map tool_name to secret_id
 				const secretMap = new Map<string, string>();
-				let hasLinearSecrets = false;
+				let hasGithubSecrets = false;
 
 				for (const secret of secrets) {
 					if (secret.tool_name && secret.tool_arg === 'api_token') {
 						secretMap.set(secret.tool_name, secret.secret_id);
-						if (LINEAR_TOOL_NAMES.includes(secret.tool_name)) {
-							hasLinearSecrets = true;
+						if (GITHUB_TOOL_NAMES.includes(secret.tool_name)) {
+							hasGithubSecrets = true;
 						}
 					}
 				}
 
 				setExistingSecrets(secretMap);
-				setIsConfigured(hasLinearSecrets);
+				setIsConfigured(hasGithubSecrets);
 			} catch (err) {
 				console.error('Error checking secrets:', err);
 			} finally {
@@ -94,15 +108,15 @@ export function LinearPage() {
 	}, [rawResponse]);
 
 	async function handleSaveSecret() {
-		if (!linearApiKey.trim() || !secretName.trim()) {
-			setSecretError('Please provide both secret name and Linear API key');
+		if (!githubApiKey.trim() || !secretName.trim()) {
+			setSecretError('Please provide both secret name and GitHub API key');
 			return;
 		}
 
 		setIsSavingSecret(true);
 		setSecretError(null);
 		setSecretSuccess(null);
-		setSaveProgress({ current: 0, total: LINEAR_TOOL_NAMES.length });
+		setSaveProgress({ current: 0, total: GITHUB_TOOL_NAMES.length });
 
 		try {
 			// First, fetch current secrets to determine if we should use POST or PATCH
@@ -119,7 +133,7 @@ export function LinearPage() {
 				currentSecretsMap.set(secret.secret_name, secret.secret_id);
 			}
 
-			// Call the secrets API for each Linear tool in batches to avoid rate limiting
+			// Call the secrets API for each GitHub tool in batches to avoid rate limiting
 			// Use PATCH if secret exists, POST if it doesn't
 			const BATCH_SIZE = 2; // Process 2 requests at a time (reduced to avoid rate limits)
 			const BATCH_DELAY = 1000; // Wait 1 second between batches
@@ -173,8 +187,8 @@ export function LinearPage() {
 				return { toolName, error: 'Max retries exceeded' };
 			}
 
-			for (let i = 0; i < LINEAR_TOOL_NAMES.length; i += BATCH_SIZE) {
-				const batch = LINEAR_TOOL_NAMES.slice(i, i + BATCH_SIZE);
+			for (let i = 0; i < GITHUB_TOOL_NAMES.length; i += BATCH_SIZE) {
+				const batch = GITHUB_TOOL_NAMES.slice(i, i + BATCH_SIZE);
 				const promises = batch.map((toolName) => {
 					const secretId = currentSecretsMap.get(`${secretName}-${toolName}`);
 					const method = secretId ? 'PATCH' : 'POST';
@@ -187,7 +201,7 @@ export function LinearPage() {
 						url,
 						{
 							secret_name: `${secretName}-${toolName}`,
-							secret_value: linearApiKey,
+							secret_value: githubApiKey,
 							tool_name: toolName,
 							tool_arg: 'api_token',
 							is_default_for_tool: true
@@ -203,11 +217,11 @@ export function LinearPage() {
 				}
 
 				// Update progress
-				const completed = Math.min(i + BATCH_SIZE, LINEAR_TOOL_NAMES.length);
-				setSaveProgress({ current: completed, total: LINEAR_TOOL_NAMES.length });
+				const completed = Math.min(i + BATCH_SIZE, GITHUB_TOOL_NAMES.length);
+				setSaveProgress({ current: completed, total: GITHUB_TOOL_NAMES.length });
 
 				// Wait before processing next batch (except for the last batch)
-				if (i + BATCH_SIZE < LINEAR_TOOL_NAMES.length) {
+				if (i + BATCH_SIZE < GITHUB_TOOL_NAMES.length) {
 					await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
 				}
 			}
@@ -232,10 +246,10 @@ export function LinearPage() {
 			}
 
 			const action = currentSecretsMap.size > 0 ? 'updated' : 'saved';
-			setSecretSuccess(`Successfully ${action} Linear API key for all ${LINEAR_TOOL_NAMES.length} tools`);
+			setSecretSuccess(`Successfully ${action} GitHub API key for all ${GITHUB_TOOL_NAMES.length} tools`);
 			setSaveProgress(null);
 		} catch (err: any) {
-			setSecretError(err?.message ?? 'Failed to save Linear API key');
+			setSecretError(err?.message ?? 'Failed to save GitHub API key');
 			setSaveProgress(null);
 		} finally {
 			setIsSavingSecret(false);
@@ -247,14 +261,14 @@ export function LinearPage() {
 		setError(null);
 		setRawResponse(null);
 		try {
-			const response = await fetch('/api/agents/linear', {
+			const response = await fetch('/api/agents/github', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
 					text,
-					agent_names: ['linear_agent'],
+					agent_names: ['github_agent'],
 					args: {
 						type: 'custom',
 						name: "",
@@ -281,37 +295,38 @@ export function LinearPage() {
 	return (
 		<>
 			<section className="card">
-				<h2>Linear API Configuration</h2>
+				<h2>GitHub API Configuration</h2>
 				<div style={{ marginBottom: '16px', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }}>
-					<p style={{ margin: '0 0 8px 0', fontWeight: '500' }}>How to get your Linear API key:</p>
+					<p style={{ margin: '0 0 8px 0', fontWeight: '500' }}>How to get your GitHub API key:</p>
 					<ol style={{ margin: '0', paddingLeft: '20px', color: '#666' }}>
 						<li>Go to{' '}
 							<a
-								href="https://linear.app/ionet/settings/account/security"
+								href="https://github.com/settings/tokens"
 								target="_blank"
 								rel="noopener noreferrer"
 								style={{ color: '#0066cc', textDecoration: 'underline' }}
 							>
-								Linear Security Settings
+								GitHub Personal Access Tokens
 							</a>
 						</li>
-						<li>Create a new Personal API Access Token</li>
-						<li>Copy the generated API key</li>
-						<li>Paste it in the field below and click "Save Linear API Key"</li>
+						<li>Click "Generate new token" → "Generate new token (classic)"</li>
+						<li>Select the required scopes (e.g., repo, issues, pull requests)</li>
+						<li>Copy the generated token</li>
+						<li>Paste it in the field below and click "Save GitHub API Key"</li>
 					</ol>
 				</div>
 				<p style={{ marginBottom: '16px', color: '#666' }}>
-					Configure your Linear API key to enable Linear agent tools. The key will be saved for all Linear tools.
+					Configure your GitHub API key to enable GitHub agent tools. The key will be saved for all GitHub tools.
 				</p>
 				{isCheckingSecrets ? (
 					<p style={{ marginBottom: '16px', color: '#666', fontStyle: 'italic' }}>Checking configuration status...</p>
 				) : isConfigured ? (
 					<div style={{ marginBottom: '16px', padding: '8px 12px', backgroundColor: '#1a3a2a', border: '1px solid #28a745', borderRadius: '4px', color: '#63e6be' }}>
-						✓ Linear API key is already configured
+						✓ GitHub API key is already configured
 					</div>
 				) : (
 					<div style={{ marginBottom: '16px', padding: '8px 12px', backgroundColor: '#3a2a1a', border: '1px solid #ffa500', borderRadius: '4px', color: '#ffd700' }}>
-						⚠ Linear API key not configured. Please enter your API key below.
+						⚠ GitHub API key not configured. Please enter your API key below.
 					</div>
 				)}
 				<div className="actions" style={{ marginBottom: '12px' }}>
@@ -323,20 +338,20 @@ export function LinearPage() {
 							value={secretName}
 							readOnly
 							style={{ backgroundColor: '#1a2332', color: '#eef2f6', cursor: 'not-allowed', opacity: 0.7 }}
-							placeholder="e.g., linear-api-key"
+							placeholder="e.g., github-api-key"
 						/>
 					</div>
 				</div>
 				<div className="actions" style={{ marginBottom: '12px' }}>
 					<div style={{ flex: 1 }}>
-						<label className="label" htmlFor="linear-api-key">Linear API Key</label>
+						<label className="label" htmlFor="github-api-key">GitHub API Key</label>
 						<input
-							id="linear-api-key"
+							id="github-api-key"
 							className="textarea"
 							type="password"
-							value={linearApiKey}
-							onChange={(e) => setLinearApiKey(e.target.value)}
-							placeholder="Enter your Linear API key"
+							value={githubApiKey}
+							onChange={(e) => setGithubApiKey(e.target.value)}
+							placeholder="Enter your GitHub API key"
 						/>
 					</div>
 				</div>
@@ -344,15 +359,15 @@ export function LinearPage() {
 					<button
 						className="button"
 						onClick={handleSaveSecret}
-						disabled={isSavingSecret || !linearApiKey.trim() || !secretName.trim()}
+						disabled={isSavingSecret || !githubApiKey.trim() || !secretName.trim()}
 					>
 						{isSavingSecret
 							? saveProgress
 								? `Saving… (${saveProgress.current}/${saveProgress.total})`
 								: 'Saving…'
 							: isConfigured
-								? 'Update Linear API Key'
-								: 'Save Linear API Key'}
+								? 'Update GitHub API Key'
+								: 'Save GitHub API Key'}
 					</button>
 				</div>
 				{saveProgress && (
@@ -368,12 +383,12 @@ export function LinearPage() {
 
 			<section className="card">
 				<VoiceTextInput
-					id="linear-input"
+					id="github-input"
 					label="Input text"
 					value={text}
 					onChange={setText}
 					rows={8}
-					placeholder="Paste text for the linear agent..."
+					placeholder="Paste text for the github agent..."
 				/>
 				<div className="actions" style={{ marginTop: 12 }}>
 					<div style={{ flex: 1 }}>
@@ -393,7 +408,7 @@ export function LinearPage() {
 				</div>
 				<div className="actions">
 					<button className="button" onClick={handleRun} disabled={isLoading || !text.trim()}>
-						{isLoading ? 'Running…' : 'Run linear agent'}
+						{isLoading ? 'Running…' : 'Run github agent'}
 					</button>
 				</div>
 				{error && <div className="error">Error: {error}</div>}
