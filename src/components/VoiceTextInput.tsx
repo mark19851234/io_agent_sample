@@ -114,7 +114,7 @@ export function VoiceTextInput(props: VoiceTextInputProps) {
 	}, [commitTranscript, getRecognizer, stopRecording]);
 
 	return (
-		<>
+		<div className="flex flex-col gap-2 pb-10" style={{ marginBottom: '30px' }}>
 			<label htmlFor={id ?? 'voice-input'} className="label">
 				{label}
 			</label>
@@ -139,7 +139,7 @@ export function VoiceTextInput(props: VoiceTextInputProps) {
 				{isRecording && <div style={{ marginLeft: 12 }}>Listening… {interim && `(“${interim}”)`}</div>}
 			</div>
 			{error && <div className="error">Speech error: {error}</div>}
-		</>
+		</div>
 	);
 }
 

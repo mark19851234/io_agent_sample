@@ -24,6 +24,16 @@ export default defineConfig(({ mode }) => {
                         Authorization: `Bearer ${apiKey || ''}`
                     },
                     rewrite: () => '/api/v1/workflows/run'
+                },
+                // Secrets API proxy (handles both GET /api/secrets/ and POST/PATCH /api/secrets/ or /api/secrets/:id)
+                '/api/secrets': {
+                    target: apiBase,
+                    changeOrigin: true,
+                    secure: true,
+                    headers: {
+                        'x-api-key': apiKey || ''
+                    },
+                    rewrite: (path) => path.replace(/^\/api\/secrets/, '/v1/secrets')
                 }
             }
         }

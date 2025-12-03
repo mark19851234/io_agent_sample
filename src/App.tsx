@@ -11,8 +11,7 @@ export function App() {
 	return (
 		<div className="container">
 			<header>
-				<h1>Agent Samples</h1>
-				<p>React + Vite demo calling your agents via a secure dev proxy.</p>
+				<h1>Agent API Playground</h1>
 				<nav className="nav">
 					<Link className="nav-link" to="/summary">Summary agent</Link>
 					<Link className="nav-link" to="/linear">Linear agent</Link>
