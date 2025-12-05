@@ -2,6 +2,7 @@ import { Link, Navigate, Route, Routes } from 'react-router-dom';
 import { SummaryPage } from './pages/SummaryPage';
 import { LinearPage } from './pages/LinearPage';
 import { GitHubPage } from './pages/GitHubPage';
+import { YouTubePage } from './pages/YouTubePage';
 import { SentimentPage } from './pages/SentimentPage';
 import { EntitiesPage } from './pages/EntitiesPage';
 import { ClassificationPage } from './pages/ClassificationPage';
@@ -17,6 +18,7 @@ export function App() {
 					<Link className="nav-link" to="/summary">Summary agent</Link>
 					<Link className="nav-link" to="/linear">Linear agent</Link>
 					<Link className="nav-link" to="/github">GitHub agent</Link>
+					<Link className="nav-link" to="/youtube">YouTube comparison</Link>
 					<Link className="nav-link" to="/sentiment">Sentiment analysis</Link>
 					<Link className="nav-link" to="/entities">Named Entity Recognizer</Link>
 					<Link className="nav-link" to="/classification">Classification</Link>
@@ -29,6 +31,7 @@ export function App() {
 				<Route path="/summary" element={<SummaryPage />} />
 				<Route path="/linear" element={<LinearPage />} />
 				<Route path="/github" element={<GitHubPage />} />
+				<Route path="/youtube" element={<YouTubePage />} />
 				<Route path="/sentiment" element={<SentimentPage />} />
 				<Route path="/entities" element={<EntitiesPage />} />
 				<Route path="/classification" element={<ClassificationPage />} />
