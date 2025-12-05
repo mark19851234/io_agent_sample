@@ -36,7 +36,7 @@ export function LinearPage() {
 	const [existingSecrets, setExistingSecrets] = useState<Map<string, string>>(new Map()); // tool_name -> secret_id
 	const [isConfigured, setIsConfigured] = useState<boolean>(false);
 	const [text, setText] = useState<string>(SAMPLE_TEXT);
-	const [name, setName] = useState<string>('');
+	const [name, setName] = useState<string>('foo');
 	const [objective, setObjective] = useState<string>('show me my linear tickets');
 	const [instructions, setInstructions] = useState<string>('use tools to show me my tickets');
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -263,7 +263,7 @@ export function LinearPage() {
 		setError(null);
 		setRawRequest(null);
 		setRawResponse(null);
-		
+
 		const url = '/api/agents/linear';
 		const method = 'POST';
 		const headers = {
@@ -274,7 +274,7 @@ export function LinearPage() {
 			agent_names: ['linear_agent'],
 			args: {
 				type: 'custom',
-				name: "",
+				name,
 				objective,
 				instructions
 			}
@@ -282,7 +282,7 @@ export function LinearPage() {
 
 		try {
 			const { request, response } = await makeApiCall(url, method, headers, requestPayload);
-			
+
 			setRawRequest(request);
 			setRawResponse(response);
 

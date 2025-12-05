@@ -21,7 +21,8 @@ export default defineConfig(({ mode }) => {
                     changeOrigin: true,
                     secure: true,
                     headers: {
-                        Authorization: `Bearer ${apiKey || ''}`
+                        // Authorization: `Bearer ${apiKey || ''}`,
+                        'x-api-key': apiKey || ''
                     },
                     rewrite: () => '/api/v1/workflows/run'
                 },

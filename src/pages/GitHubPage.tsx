@@ -87,7 +87,7 @@ export function GitHubPage() {
 				let hasGithubSecrets = false;
 
 				for (const secret of secrets) {
-					if (secret.tool_name && secret.tool_arg === 'api_token') {
+					if (secret.tool_name && secret.tool_arg === 'access_token') {
 						secretMap.set(secret.tool_name, secret.secret_id);
 						if (GITHUB_TOOL_NAMES.includes(secret.tool_name)) {
 							hasGithubSecrets = true;
@@ -219,7 +219,7 @@ export function GitHubPage() {
 							secret_name: `${secretName}-${toolName}`,
 							secret_value: githubApiKey,
 							tool_name: toolName,
-							tool_arg: 'api_token',
+							tool_arg: 'access_token',
 							is_default_for_tool: true
 						}
 					);
